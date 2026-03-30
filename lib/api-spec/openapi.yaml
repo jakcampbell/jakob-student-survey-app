@@ -1,0 +1,200 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: College Student Lifestyle & Productivity Survey API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: survey
+    description: Survey operations
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /survey/submit:
+    post:
+      operationId: submitSurvey
+      tags: [survey]
+      summary: Submit a survey response
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SurveySubmission"
+      responses:
+        "201":
+          description: Survey submitted successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SurveySubmitResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /survey/results:
+    get:
+      operationId: getSurveyResults
+      tags: [survey]
+      summary: Get aggregated survey results
+      responses:
+        "200":
+          description: Survey results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SurveyResults"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    SurveySubmission:
+      type: object
+      properties:
+        major:
+          type: string
+          description: Student's major
+        classAttendance:
+          type: string
+          enum: [every_class, most_classes, sometimes, rarely]
+          description: How often they attend class
+        studyHoursPerWeek:
+          type: string
+          enum: [0_5, 6_10, 11_15, 16_20, 20_plus]
+          description: Weekly study hours range
+        distractions:
+          type: array
+          items:
+            type: string
+            enum: [phone_social_media, friends, tv_netflix, gaming, noise, other]
+          description: Main distractions while studying
+        feelsProductive:
+          type: string
+          enum: [yes, no]
+          description: Whether they feel productive most days
+        sleepHours:
+          type: string
+          enum: [less_than_5, 5_6, 7_8, 9_plus]
+          description: Hours of sleep per night
+        productivityHabits:
+          type: array
+          items:
+            type: string
+            enum: [gym, planner, friends, music, breaks, nothing]
+          description: Things they do to stay productive
+        routineChange:
+          type: string
+          nullable: true
+          description: Optional text about what they'd change about their routine
+      required:
+        - major
+        - classAttendance
+        - studyHoursPerWeek
+        - distractions
+        - feelsProductive
+        - sleepHours
+        - productivityHabits
+
+    SurveySubmitResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        message:
+          type: string
+      required:
+        - id
+        - message
+
+    SurveyResults:
+      type: object
+      properties:
+        totalResponses:
+          type: integer
+        productivePercentage:
+          type: number
+        mostCommonMajors:
+          type: array
+          items:
+            $ref: "#/components/schemas/AnswerCount"
+        classAttendanceBreakdown:
+          type: array
+          items:
+            $ref: "#/components/schemas/AnswerCount"
+        studyHoursBreakdown:
+          type: array
+          items:
+            $ref: "#/components/schemas/AnswerCount"
+        topDistractions:
+          type: array
+          items:
+            $ref: "#/components/schemas/AnswerCount"
+        sleepBreakdown:
+          type: array
+          items:
+            $ref: "#/components/schemas/AnswerCount"
+        topProductivityHabits:
+          type: array
+          items:
+            $ref: "#/components/schemas/AnswerCount"
+      required:
+        - totalResponses
+        - productivePercentage
+        - mostCommonMajors
+        - classAttendanceBreakdown
+        - studyHoursBreakdown
+        - topDistractions
+        - sleepBreakdown
+        - topProductivityHabits
+
+    AnswerCount:
+      type: object
+      properties:
+        answer:
+          type: string
+        count:
+          type: integer
+        percentage:
+          type: number
+      required:
+        - answer
+        - count
+        - percentage
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        details:
+          type: array
+          items:
+            type: string
+      required:
+        - error
